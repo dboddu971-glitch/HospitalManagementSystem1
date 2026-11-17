@@ -2,15 +2,11 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_IMAGE = 'divya832008/hospital-management-system'
-    }
-
     stages {
 
         stage('Checkout') {
             steps {
-                echo 'Checking out source code from GitHub'
+                echo 'Checking out source code'
                 checkout scm
             }
         }
@@ -29,32 +25,29 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                bat 'docker build -t %DOCKER_IMAGE%:%BUILD_NUMBER% .'
+                bat 'docker build -t hospital-management-system:jenkins .'
             }
         }
 
-        stage('Docker Push') {
+        stage('Deploy') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    bat 'echo %DOCKER_PASS%| docker login -u "%DOCKER_USER%" --password-stdin'
-                    bat 'docker push %DOCKER_IMAGE%:%BUILD_NUMBER%'
-                    bat 'docker logout'
-                }
+                bat '''
+                docker rm -f hospital-jenkins-app 2>NUL
+                docker run -d --name hospital-jenkins-app -p 8089:8087 -v hospital-db-data:/app/data hospital-management-system:jenkins
+                '''
             }
         }
     }
 
     post {
         success {
-            echo 'Hospital Management System pipeline completed successfully!'
+            echo 'Build, Test and Deployment Successful!'
         }
+
         failure {
             echo 'Pipeline failed. Check Console Output.'
         }
+
         always {
             echo 'Pipeline execution completed.'
         }
