@@ -1,55 +1,21 @@
 
-pipeline {
-    agent any
-
-    stages {
-
-        stage('Checkout') {
+        stage('Docker Check') {
             steps {
-                echo 'Checking out source code'
-                checkout scm
-            }
-        }
-
-        stage('Build') {
-            steps {
-                bat 'mvnw.cmd -B clean package -DskipTests'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                bat 'mvnw.cmd -B test'
+                bat '"C:\\Users\\User\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" version'
             }
         }
 
         stage('Docker Build') {
             steps {
-                bat 'docker build -t hospital-management-system:jenkins .'
+                bat '"C:\\Users\\User\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" build -t hospital-management-system:jenkins .'
             }
         }
 
         stage('Deploy') {
             steps {
                 bat '''
-                docker rm -f hospital-jenkins-app 2>NUL
-                docker run -d --name hospital-jenkins-app -p 8089:8087 -v hospital-db-data:/app/data hospital-management-system:jenkins
+                "C:\\Users\\User\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" rm -f hospital-jenkins-app 2>NUL
+                "C:\\Users\\User\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" run -d --name hospital-jenkins-app -p 8089:8087 -v hospital-db-data:/app/data hospital-management-system:jenkins
                 '''
             }
         }
-    }
-
-    post {
-        success {
-            echo 'Build, Test and Deployment Successful!'
-        }
-
-        failure {
-            echo 'Pipeline failed. Check Console Output.'
-        }
-
-        always {
-            echo 'Pipeline execution completed.'
-        }
-    }
-}
