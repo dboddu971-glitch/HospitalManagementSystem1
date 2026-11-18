@@ -1,4 +1,28 @@
 
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+                echo 'Source code downloaded successfully'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                bat 'mvnw.cmd -B clean package -DskipTests'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                bat 'mvnw.cmd -B test'
+            }
+        }
+
         stage('Docker Check') {
             steps {
                 bat '"C:\\Users\\User\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" version'
@@ -19,3 +43,17 @@
                 '''
             }
         }
+    }
+
+    post {
+        success {
+            echo 'Hospital Management System deployed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Check Console Output.'
+        }
+        always {
+            echo 'Pipeline execution completed.'
+        }
+    }
+}
